@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot>
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/sensor_stick</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+  <!--base_link-->
+  <gazebo reference="base_link">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!--link_1-->
+  <gazebo reference="link_1">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <!--link_2-->
+  <gazebo reference="link_2">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!--camera_link-->
+  <gazebo reference="camera_link">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <!--RGBD camera -->
+  <gazebo reference="camera_rgb_frame">
+   <sensor type="depth" name="camera">
+     <always_on>true</always_on>
+     <visualize>false</visualize>
+     <update_rate>15.0</update_rate>
+     <camera name="front">
+       <horizontal_fov>1.047197</horizontal_fov>
+       <image>
+         <!-- openni_kinect plugin works only with BGR8 -->
+         <format>B8G8R8</format>
+         <width>640</width>
+         <height>480</height>
+       </image>
+       <clip>
+         <near>0.01</near>
+         <far>9</far>
+       </clip>
+     </camera>
+     <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
+       <baseline>0.1</baseline>
+       <alwaysOn>true</alwaysOn>
+       <updateRate>15.0</updateRate>
+       <cameraName>camera</cameraName>
+       <imageTopicName>/camera/rgb/image_raw</imageTopicName>
+       <cameraInfoTopicName>/camera/rgb/camera_info</cameraInfoTopicName>
+       <depthImageTopicName>/camera/depth_registered/image_raw</depthImageTopicName>
+       <depthImageCameraInfoTopicName>/camera/depth_registered/camera_info</depthImageCameraInfoTopicName>
+       <pointCloudTopicName>/camera/depth_registered/points</pointCloudTopicName>
+       <frameName>camera_rgb_optical_frame</frameName>
+       <pointCloudCutoff>0.35</pointCloudCutoff>
+       <pointCloudCutoffMax>4.5</pointCloudCutoffMax>
+       <CxPrime>0</CxPrime>
+       <Cx>0</Cx>
+       <Cy>0</Cy>
+       <focalLength>0</focalLength>
+       <hackBaseline>0</hackBaseline>
+     </plugin>
+   </sensor>
+  </gazebo>
+
+</robot>

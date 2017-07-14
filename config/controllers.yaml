@@ -1,0 +1,14 @@
+sensor_stick:
+    #list of controllers
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 50
+
+    pan_position_controller:
+      type: position_controllers/JointPositionController
+      joint: pan_joint
+      #pid: {p: 10.0, i: 0.1, d: 10.0}
+    tilt_position_controller:
+      type: position_controllers/JointPositionController
+      joint: tilt_joint
+      #pid: {p: 10.0, i: 0.1, d: 10.0}

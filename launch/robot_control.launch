@@ -1,0 +1,10 @@
+<launch>
+  <!--Load the joint controllers to param server-->
+  <rosparam file="$(find sensor_stick)/config/controllers.yaml" command="load"/>
+
+  <!--Load controllers-->
+  <node name="spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" ns="/sensor_stick" args="joint_state_controller
+    pan_position_controller
+    tilt_position_controller"/>
+</launch>
