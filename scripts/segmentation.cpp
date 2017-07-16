@@ -17,6 +17,14 @@ Author: Sean Cassero
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/filters/extract_indices.h>
 
 
 
@@ -56,8 +64,8 @@ public:
     pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
     pcl::PCLPointCloud2ConstPtr cloudPtr(cloud); // call the const ptr constructor and pass it the newly created ptr 'cloud'
     // create a container to hold the point cloud after filtration
-    pcl::PCLPointCloud2 cloud_filtered;
-    pcl::PCLPointCloud2Ptr cloudPtrFiltered(&cloud_filtered) ;
+    pcl::PCLPointCloud2* cloud_filtered = new pcl::PCLPointCloud2;
+    pcl::PCLPointCloud2Ptr cloudPtrFiltered(cloud_filtered) ;
 
     // Convert to PCL data type
     pcl_conversions::toPCL(*cloud_msg, *cloud);
@@ -65,21 +73,36 @@ public:
 
     // Create the passthrough filtering object
     pcl::PassThrough<pcl::PCLPointCloud2> pass;
-    pass.setInputCloud (cloudPtr);
-    pass.setFilterFieldName ("z");
-    pass.setFilterLimits (0.0, 2.0);
+    pass.setInputCloud(cloudPtr);
+    pass.setFilterFieldName("z");
+    pass.setFilterLimits(0.0, 2.0);
     //pass.setFilterLimitsNegative (true);
-    pass.filter (cloud_filtered);
+    pass.filter(*cloud_filtered);
 
 
     // Perform voxel downsample filtering
     pcl::VoxelGrid<pcl::PCLPointCloud2> sor; // declare the voxel grid object of type PCLPointCloud2
     sor.setInputCloud(cloudPtrFiltered);
     sor.setLeafSize(0.1, 0.1, 0.1); // specify the leaf size
-    sor.filter(cloud_filtered); // perform the filtration
+    sor.filter(*cloud_filtered); // perform the filtration
 
 
+    // perform RANSAC filtration
+    pcl::PointCloud<pcl::PCLPointCloud2>::Ptr ransac_input_cloud (new pcl::PointCloud<pcl::PCLPointCloud2>);
 
+
+    // the ransac filtration uses the pcl::PointCloud<pcl::PCLPointCloud2> template for calculations
+    // we are currently working in the pcl::PCLPointCloud data type. We must do conversions before calcs
+
+    //pcl::PointCloud<pcl::PCLPointCloud2> ransac_input_cloud;
+
+    //pcl::fromPCLPointCloud2(*cloud_filtered, ransac_input_cloud);
+    std::vector<int> inliers; // create a vector of ints to hold the indices of the inliers
+    pcl::SampleConsensusModelPlane<pcl::PCLPointCloud2>::Ptr ransac_plane(new pcl::SampleConsensusModelPlane<pcl::PCLPointCloud2> (ransac_input_cloud));
+    pcl::RandomSampleConsensus<pcl::PCLPointCloud2> ransac (ransac_plane);
+    ransac.setDistanceThreshold (.01);
+    ransac.computeModel();
+    ransac.getInliers(inliers);
 
 
 
@@ -87,7 +110,7 @@ public:
 
     // Convert to ROS data type
     sensor_msgs::PointCloud2 output;
-    pcl_conversions::fromPCL(cloud_filtered, output);
+    pcl_conversions::fromPCL(*cloud_filtered, output);
 
     // Publish the data
     m_pub.publish(output);
