@@ -44,22 +44,46 @@ public:
   }
 
   // define the callback function when the node recieves a message from the /sensor_stick/point_cloud topic
+
+  // we pass a const pointer to the received message of the PointCloud2 type to the callback function
   void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   {
 
-    // Container for original & filtered data
+    // ROS messages pass point clouds in different formats then pcl is used to handling
+    // in order to use PCL we need to change the data type to a PCL standard type
+
+    // create a container to hold the point cloud after conversion to pcl::PCLPointCloud2
     pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
-    pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+    pcl::PCLPointCloud2ConstPtr cloudPtr(cloud); // call the const ptr constructor and pass it the newly created ptr 'cloud'
+    // create a container to hold the point cloud after filtration
     pcl::PCLPointCloud2 cloud_filtered;
+    pcl::PCLPointCloud2Ptr cloudPtrFiltered(&cloud_filtered) ;
 
     // Convert to PCL data type
     pcl_conversions::toPCL(*cloud_msg, *cloud);
 
-    // Perform the actual filtering
-    pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
-    sor.setInputCloud (cloudPtr);
-    sor.setLeafSize (0.1, 0.1, 0.1);
-    sor.filter (cloud_filtered);
+
+    // Create the passthrough filtering object
+    pcl::PassThrough<pcl::PCLPointCloud2> pass;
+    pass.setInputCloud (cloudPtr);
+    pass.setFilterFieldName ("z");
+    pass.setFilterLimits (0.0, 2.0);
+    //pass.setFilterLimitsNegative (true);
+    pass.filter (cloud_filtered);
+
+
+    // Perform voxel downsample filtering
+    pcl::VoxelGrid<pcl::PCLPointCloud2> sor; // declare the voxel grid object of type PCLPointCloud2
+    sor.setInputCloud(cloudPtrFiltered);
+    sor.setLeafSize(0.1, 0.1, 0.1); // specify the leaf size
+    sor.filter(cloud_filtered); // perform the filtration
+
+
+
+
+
+
+
 
     // Convert to ROS data type
     sensor_msgs::PointCloud2 output;
@@ -81,14 +105,7 @@ int main(int argc, char **argv){
   // initialize the node
   ros::init(argc, argv, "segmentation");
 
-  // create the publishers and subscribers
-  // the node in this example gets the PointCloud2 message from the /sensor_stick/point_cloud topic
-  //ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/sensor_stick/point_cloud", 1, callback);
-  // we wish to publish a ros PointCloud2 to the /pcl_objects topic
-  //ros::Publisher pcl_objects_pub = nh.advertise<sensor_msgs::PointCloud2>("pcl_objects", 1);
-
-
-
+  // while node is not shutdown, wait for messages
   while(ros::ok()){
     ros::spin();
   }
