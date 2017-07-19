@@ -26,6 +26,7 @@ Author: Sean Cassero
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/conversions.h>
+#include <pcl/sample_consensus/sac_model_perpendicular_plane.h>
 
 
 
@@ -100,29 +101,58 @@ public:
     // new dynamically allocates memory and returns a pointer to the new variable on the heap. here we are creating
     // a new point cloud data structure to pass to the ransac function
     pcl::PointCloud<pcl::PointXYZ> *xyz_cloud = new pcl::PointCloud<pcl::PointXYZ>;
-    // cast as a shared pointer
-    pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtr (xyz_cloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtr (xyz_cloud); // need a boost shared pointer for pcl function inputs
+
+    // create a pcl object to hold the filtered results
+    pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZ>;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrFiltered (xyz_cloud_filtered);
 
     // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
     pcl::fromPCLPointCloud2(*cloudPtrFiltered, *xyzCloudPtr);
 
     // now we wish to create a new ransac plane model
-    pcl::SampleConsensusModelPlane<pcl::PointXYZ> *ransac_plane_model = new pcl::SampleConsensusModelPlane<pcl::PointXYZ> (xyzCloudPtr);
+    //pcl::SampleConsensusModelPlane<pcl::PointXYZ> *ransac_plane_model = new pcl::SampleConsensusModelPlane<pcl::PointXYZ> (xyzCloudPtr);
     // cast as a shared_ptr
-    pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr planeModelPtr(ransac_plane_model);
+    //pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr planeModelPtr(ransac_plane_model);
 
     // perform ransac segmentation
-    std::vector<int> inliers; // create a vector of ints to hold the indices of the inliers
-    pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(planeModelPtr);
-    ransac.setDistanceThreshold (.01);
-    ransac.computeModel();
 
-    // extract the outliers
-    ransac.getInliers(inliers);
+    // std::vector<int> inliers;
+    // get a pointer to indices
+    //pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+
+    // create the ransac object and pass it the plane model
+    //pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(planeModelPtr);
+
+    // specify ransac parameters and compute
+    //ransac.setDistanceThreshold (.01);
+    //ransac.computeModel();
+
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    // Create the segmentation object
+    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    // Optional
+    seg.setOptimizeCoefficients (true);
+    // Mandatory
+    seg.setModelType (pcl::SACMODEL_PLANE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    seg.setDistanceThreshold (0.01);
+
+    seg.setInputCloud (xyzCloudPtr);
+    seg.segment (*inliers, *coefficients);
+
+    // Create the filtering object
+    pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+    extract.setInputCloud (xyzCloudPtr);
+    extract.setIndices (inliers);
+    extract.setNegative (true);
+    extract.filter (*xyzCloudPtrFiltered);
 
 
     // convert to pcl::PCLPointCloud2
-    pcl::toPCLPointCloud2(*xyzCloudPtr,*cloudPtrFiltered);
+    pcl::toPCLPointCloud2(*xyzCloudPtrFiltered,*cloudPtrFiltered);
     // Convert to ROS data type
     sensor_msgs::PointCloud2 output;
     pcl_conversions::fromPCL(*cloudPtrFiltered, output);
