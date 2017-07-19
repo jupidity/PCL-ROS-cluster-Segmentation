@@ -99,26 +99,26 @@ public:
 
     // new dynamically allocates memory and returns a pointer to the new variable on the heap. here we are creating
     // a new point cloud data structure to pass to the ransac function
-    pcl::PointCloud<pcl::PointXYZ> *input_pointer = new pcl::PointCloud<pcl::PointXYZ>;
+    pcl::PointCloud<pcl::PointXYZ> *xyz_cloud = new pcl::PointCloud<pcl::PointXYZ>;
     // cast as a shared pointer
-    pcl::PointCloud<pcl::PointXYZ>::Ptr ransac_input_cloud (input_pointer);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtr (xyz_cloud);
 
     // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
-    pcl::fromPCLPointCloud2(*cloudPtrFiltered, *ransac_input_cloud);
+    pcl::fromPCLPointCloud2(*cloudPtrFiltered, *xyzCloudPtr);
 
     // now we wish to create a new ransac plane model
-    pcl::SampleConsensusModelPlane<pcl::PointXYZ> *ransac_ptr = new pcl::SampleConsensusModelPlane<pcl::PointXYZ> (ransac_input_cloud);
+    pcl::SampleConsensusModelPlane<pcl::PointXYZ> *ransac_plane_model = new pcl::SampleConsensusModelPlane<pcl::PointXYZ> (xyzCloudPtr);
     // cast as a shared_ptr
-    pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr ransac_plane(ransac_ptr);
+    pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr planeModelPtr(ransac_plane_model);
 
     // perform ransac segmentation
     std::vector<int> inliers; // create a vector of ints to hold the indices of the inliers
-    pcl::RandomSampleConsensus<pcl::PointXYZ> ransac (ransac_plane);
+    pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(planeModelPtr);
     ransac.setDistanceThreshold (.01);
     ransac.computeModel();
+
+    // extract the outliers
     ransac.getInliers(inliers);
-
-
 
 
 
@@ -141,6 +141,9 @@ int main(int argc, char **argv){
 
   // initialize the node
   ros::init(argc, argv, "segmentation");
+
+  // start a class of the publisher and subscriber
+  pclPubSub segmentation;
 
   // while node is not shutdown, wait for messages
   while(ros::ok()){
