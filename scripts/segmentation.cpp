@@ -121,10 +121,11 @@ public:
     ransac.getInliers(inliers);
 
 
-
+    // convert to pcl::PCLPointCloud2
+    pcl::toPCLPointCloud2(*xyzCloudPtr,*cloudPtrFiltered);
     // Convert to ROS data type
     sensor_msgs::PointCloud2 output;
-    pcl_conversions::fromPCL(*cloud_filtered, output);
+    pcl_conversions::fromPCL(*cloudPtrFiltered, output);
 
     // Publish the data
     m_pub.publish(output);
