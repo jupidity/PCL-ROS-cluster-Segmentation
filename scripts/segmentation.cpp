@@ -73,7 +73,7 @@ public:
     // the pcl lib works with the boost::shared_ptr type for function calls, we need to cast the newly created
     // pointer as such before using it further. PCL typedefs the ConstPtr and Ptr as shared_ptrs, we just need to
     // pass the pointer to a constructor.
-    pcl::PCLPointCloud2ConstPtr cloudPtrFiltered(cloud_filtered) ;
+    pcl::PCLPointCloud2Ptr cloudPtrFiltered(cloud_filtered) ;
 
     // Convert to PCL data type. Since the could_msg and cloud vars are pointers, we need to dereference them
     // before passing to the pcl_conversions function
@@ -85,14 +85,14 @@ public:
     pass.setFilterFieldName("z");
     pass.setFilterLimits(0.0, 2.0);
     //pass.setFilterLimitsNegative (true);
-    pass.filter(*cloud_filtered);
+    pass.filter(*cloudPtrFiltered);
 
 
     // Perform voxel downsample filtering
     pcl::VoxelGrid<pcl::PCLPointCloud2> sor; // declare the voxel grid object of type PCLPointCloud2
     sor.setInputCloud(cloudPtrFiltered);
     sor.setLeafSize(0.1, 0.1, 0.1); // specify the leaf size
-    sor.filter(*cloud_filtered); // perform the filtration
+    sor.filter(*cloudPtrFiltered); // perform the filtration
 
 
     // perform RANSAC filtration
@@ -104,19 +104,14 @@ public:
     pcl::PointCloud<pcl::PointXYZ>::Ptr ransac_input_cloud (input_pointer);
 
     // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
-    pcl::fromPCLPointCloud2(*cloud_filtered, *ransac_input_cloud);
+    pcl::fromPCLPointCloud2(*cloudPtrFiltered, *ransac_input_cloud);
 
     // now we wish to create a new ransac plane model
     pcl::SampleConsensusModelPlane<pcl::PointXYZ> *ransac_ptr = new pcl::SampleConsensusModelPlane<pcl::PointXYZ> (ransac_input_cloud);
     // cast as a shared_ptr
     pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr ransac_plane(ransac_ptr);
 
-    // the ransac filtration uses the pcl::PointCloud<pcl::PCLPointCloud2> template for calculations
-    // we are currently working in the pcl::PCLPointCloud data type. We must do conversions before calcs
-
-    //pcl::PointCloud<pcl::PCLPointCloud2> ransac_input_cloud;
-
-    //pcl::fromPCLPointCloud2(*cloud_filtered, *ransac_input_cloud);
+    // perform ransac segmentation
     std::vector<int> inliers; // create a vector of ints to hold the indices of the inliers
     pcl::RandomSampleConsensus<pcl::PointXYZ> ransac (ransac_plane);
     ransac.setDistanceThreshold (.01);
