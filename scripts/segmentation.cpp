@@ -15,6 +15,14 @@ Author: Sean Cassero
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/extract_indices.h>
 
 ros::Publisher pub;
 
@@ -42,9 +50,13 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   pcl::PointCloud<pcl::PointXYZ> *xyz_cloud = new pcl::PointCloud<pcl::PointXYZ>;
   pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtr (xyz_cloud); // need a boost shared pointer for pcl function inputs
 
-  // create a pcl object to hold the filtered results
+  // create a pcl object to hold the passthrough filtered results
   pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZ>;
   pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrFiltered (xyz_cloud_filtered);
+
+  // create a pcl object to hold the ransac filtered results
+  pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_ransac_filtered = new pcl::PointCloud<pcl::PointXYZ>;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrRansacFiltered (xyz_cloud_ransac_filtered);
 
   // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
   pcl::fromPCLPointCloud2(*cloudFilteredPtr, *xyzCloudPtr);
@@ -61,9 +73,34 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
 
+  // perform ransac planar filtration to remove table
+  pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+  pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+  // Create the segmentation object
+  pcl::SACSegmentation<pcl::PointXYZ> seg;
+  // Optional
+  seg.setOptimizeCoefficients (true);
+  // Mandatory
+  seg.setModelType (pcl::SACMODEL_PLANE);
+  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setDistanceThreshold (0.01);
+
+  seg.setInputCloud (xyzCloudPtrFiltered);
+  seg.segment (*inliers, *coefficients);
+
+  // Create the filtering object
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+  extract.setInputCloud (xyzCloudPtrFiltered);
+  extract.setIndices (inliers);
+  extract.setNegative (true);
+  extract.filter (*xyzCloudPtrRansacFiltered);
+
+
+
   pcl::PCLPointCloud2 outputPCL;
   // convert to pcl::PCLPointCloud2
-  pcl::toPCLPointCloud2( *xyzCloudPtrFiltered ,outputPCL);
+  pcl::toPCLPointCloud2( *xyzCloudPtrRansacFiltered ,outputPCL);
 
   // Convert to ROS data type
   sensor_msgs::PointCloud2 output;
