@@ -105,27 +105,27 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   extract.filter (*xyzCloudPtrRansacFiltered);
 
 
-/*
+
   // perform passthrough filtering to remove table edge
 
   // create a pcl object to hold the passthrough filtered results
-  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZRGB>;
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrPassthroughFiltered (xyz_cloud_filtered);
+  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered_passthrough = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrPassthroughFiltered (xyz_cloud_filtered_passthrough);
 
   // Create the filtering object
   pass.setInputCloud (xyzCloudPtrRansacFiltered);
   pass.setFilterFieldName ("z");
-  pass.setFilterLimits (xyzCloudPtr->points[*inliers].z, 1.1);
+  pass.setFilterLimits ((xyzCloudPtrFiltered->points[inliers->indices[0]].z ), 100);
   //pass.setFilterLimits (.5, 1.1);
   //pass.setFilterLimitsNegative (true);
   pass.filter (*xyzCloudPtrPassthroughFiltered);
 
-*/
+
 
 
   // Creating the KdTree object for the search method of the extraction
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
-  tree->setInputCloud (xyzCloudPtrRansacFiltered);
+  tree->setInputCloud (xyzCloudPtrPassthroughFiltered);
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
@@ -133,31 +133,32 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   ec.setMinClusterSize (100);
   ec.setMaxClusterSize (25000);
   ec.setSearchMethod (tree);
-  ec.setInputCloud (xyzCloudPtrRansacFiltered);
+  ec.setInputCloud (xyzCloudPtrPassthroughFiltered);
   ec.extract (cluster_indices);
 
   int j = 0;
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
-  cloud_cluster->height = 1;
-  cloud_cluster->is_dense = true;
+  //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
+  //cloud_cluster->height = 1;
+  //cloud_cluster->is_dense = true;
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
 
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
     {
-      xyzCloudPtrRansacFiltered->points[*pit].rgb = 10^j; // need to figure out how to generate random color assignment
-      cloud_cluster->points.push_back (xyzCloudPtrRansacFiltered->points[*pit]);
-      cloud_cluster->width = cloud_cluster->points.size ();
+      xyzCloudPtrPassthroughFiltered->points[*pit].rgb = 10^j; // need to figure out how to generate random color assignment
+      //cloud_cluster->points.push_back (xyzCloudPtrPassthroughFiltered->points[*pit]);
+      //cloud_cluster->width = cloud_cluster->points.size ();
 
 
     }
+    j++;
   }
 
 
 
   pcl::PCLPointCloud2 outputPCL;
   // convert to pcl::PCLPointCloud2
-  pcl::toPCLPointCloud2( *xyzCloudPtrRansacFiltered ,outputPCL);
+  pcl::toPCLPointCloud2( *xyzCloudPtrPassthroughFiltered ,outputPCL);
 
   // Convert to ROS data type
   sensor_msgs::PointCloud2 output;
