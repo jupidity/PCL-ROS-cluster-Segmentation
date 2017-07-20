@@ -23,6 +23,8 @@ Author: Sean Cassero
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 ros::Publisher pub;
 
@@ -47,24 +49,23 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   sor.filter (*cloudFilteredPtr);
 
 
-  pcl::PointCloud<pcl::PointXYZ> *xyz_cloud = new pcl::PointCloud<pcl::PointXYZ>;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtr (xyz_cloud); // need a boost shared pointer for pcl function inputs
+  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtr (xyz_cloud); // need a boost shared pointer for pcl function inputs
 
-  // create a pcl object to hold the passthrough filtered results
-  pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZ>;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrFiltered (xyz_cloud_filtered);
-
-  // create a pcl object to hold the ransac filtered results
-  pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_ransac_filtered = new pcl::PointCloud<pcl::PointXYZ>;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrRansacFiltered (xyz_cloud_ransac_filtered);
-
-  // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
+  // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZRGB>
   pcl::fromPCLPointCloud2(*cloudFilteredPtr, *xyzCloudPtr);
 
-  // perform passthrough filtering
+
+
+
+  //perform passthrough filtering to remove table leg
+
+  // create a pcl object to hold the passthrough filtered results
+  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrFiltered (xyz_cloud_filtered);
 
   // Create the filtering object
-  pcl::PassThrough<pcl::PointXYZ> pass;
+  pcl::PassThrough<pcl::PointXYZRGB> pass;
   pass.setInputCloud (xyzCloudPtr);
   pass.setFilterFieldName ("z");
   pass.setFilterLimits (.5, 1.1);
@@ -73,28 +74,84 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
 
-  // perform ransac planar filtration to remove table
+  // create a pcl object to hold the ransac filtered results
+  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_ransac_filtered = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrRansacFiltered (xyz_cloud_ransac_filtered);
+
+
+  // perform ransac planar filtration to remove table top
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
   // Create the segmentation object
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
+  pcl::SACSegmentation<pcl::PointXYZRGB> seg1;
   // Optional
-  seg.setOptimizeCoefficients (true);
+  seg1.setOptimizeCoefficients (true);
   // Mandatory
-  seg.setModelType (pcl::SACMODEL_PLANE);
-  seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setDistanceThreshold (0.01);
+  seg1.setModelType (pcl::SACMODEL_PLANE);
+  seg1.setMethodType (pcl::SAC_RANSAC);
+  seg1.setDistanceThreshold (0.01);
 
-  seg.setInputCloud (xyzCloudPtrFiltered);
-  seg.segment (*inliers, *coefficients);
+  seg1.setInputCloud (xyzCloudPtrFiltered);
+  seg1.segment (*inliers, *coefficients);
+
 
   // Create the filtering object
-  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  pcl::ExtractIndices<pcl::PointXYZRGB> extract;
 
+  //extract.setInputCloud (xyzCloudPtrFiltered);
   extract.setInputCloud (xyzCloudPtrFiltered);
   extract.setIndices (inliers);
   extract.setNegative (true);
   extract.filter (*xyzCloudPtrRansacFiltered);
+
+
+/*
+  // perform passthrough filtering to remove table edge
+
+  // create a pcl object to hold the passthrough filtered results
+  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered = new pcl::PointCloud<pcl::PointXYZRGB>;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrPassthroughFiltered (xyz_cloud_filtered);
+
+  // Create the filtering object
+  pass.setInputCloud (xyzCloudPtrRansacFiltered);
+  pass.setFilterFieldName ("z");
+  pass.setFilterLimits (xyzCloudPtr->points[*inliers].z, 1.1);
+  //pass.setFilterLimits (.5, 1.1);
+  //pass.setFilterLimitsNegative (true);
+  pass.filter (*xyzCloudPtrPassthroughFiltered);
+
+*/
+
+
+  // Creating the KdTree object for the search method of the extraction
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  tree->setInputCloud (xyzCloudPtrRansacFiltered);
+
+  std::vector<pcl::PointIndices> cluster_indices;
+  pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+  ec.setClusterTolerance (0.02); // 2cm
+  ec.setMinClusterSize (100);
+  ec.setMaxClusterSize (25000);
+  ec.setSearchMethod (tree);
+  ec.setInputCloud (xyzCloudPtrRansacFiltered);
+  ec.extract (cluster_indices);
+
+  int j = 0;
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
+  cloud_cluster->height = 1;
+  cloud_cluster->is_dense = true;
+  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  {
+
+    for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+    {
+      xyzCloudPtrRansacFiltered->points[*pit].rgb = 10^j; // need to figure out how to generate random color assignment
+      cloud_cluster->points.push_back (xyzCloudPtrRansacFiltered->points[*pit]);
+      cloud_cluster->width = cloud_cluster->points.size ();
+
+
+    }
+  }
 
 
 
@@ -114,7 +171,7 @@ int
 main (int argc, char** argv)
 {
   // Initialize ROS
-  ros::init (argc, argv, "my_pcl_tutorial");
+  ros::init (argc, argv, "segmentation");
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
