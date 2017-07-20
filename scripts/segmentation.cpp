@@ -49,10 +49,21 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // convert the pcl::PointCloud2 tpye to pcl::PointCloud<pcl::PointXYZ>
   pcl::fromPCLPointCloud2(*cloudFilteredPtr, *xyzCloudPtr);
 
+  // perform passthrough filtering
+
+  // Create the filtering object
+  pcl::PassThrough<pcl::PointXYZ> pass;
+  pass.setInputCloud (xyzCloudPtr);
+  pass.setFilterFieldName ("z");
+  pass.setFilterLimits (.5, 1.1);
+  //pass.setFilterLimitsNegative (true);
+  pass.filter (*xyzCloudPtrFiltered);
+
+
 
   pcl::PCLPointCloud2 outputPCL;
   // convert to pcl::PCLPointCloud2
-  pcl::toPCLPointCloud2( *xyzCloudPtr ,outputPCL);
+  pcl::toPCLPointCloud2( *xyzCloudPtrFiltered ,outputPCL);
 
   // Convert to ROS data type
   sensor_msgs::PointCloud2 output;
