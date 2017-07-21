@@ -31,6 +31,9 @@ ros::Publisher pub;
 void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
+
+
+
   // Container for original & filtered data
   pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
   pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
@@ -163,6 +166,9 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   sensor_msgs::PointCloud2 output;
   pcl_conversions::fromPCL(outputPCL, output);
 
+
+  ROS_INFO(" ");
+
   // Publish the data
   pub.publish (output);
 }
@@ -177,7 +183,7 @@ main (int argc, char** argv)
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe ("/sensor_stick/point_cloud", 1, cloud_cb);
 
-  // Create a ROS publisher for the output point cloud
+
   pub = nh.advertise<sensor_msgs::PointCloud2> ("pcl_objects", 1);
 
   // Spin
