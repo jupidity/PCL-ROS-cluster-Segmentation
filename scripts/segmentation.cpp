@@ -56,8 +56,6 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   pcl::fromPCLPointCloud2(*cloudFilteredPtr, *xyzCloudPtr);
 
 
-
-
   //perform passthrough filtering to remove table leg
 
   // create a pcl object to hold the passthrough filtered results
@@ -106,7 +104,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 
 
-  // perform passthrough filtering to remove table edge
+  // perform passthrough filtering to remove table edge based on table top z parameter
 
   // create a pcl object to hold the passthrough filtered results
   pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered_passthrough = new pcl::PointCloud<pcl::PointXYZRGB>;
@@ -115,43 +113,44 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // Create the filtering object
   pass.setInputCloud (xyzCloudPtrRansacFiltered);
   pass.setFilterFieldName ("z");
-  pass.setFilterLimits ((xyzCloudPtrFiltered->points[inliers->indices[0]].z ), 100);
-  //pass.setFilterLimits (.5, 1.1);
-  //pass.setFilterLimitsNegative (true);
+  pass.setFilterLimits ((xyzCloudPtrFiltered->points[inliers->indices[0]].z +.01 ), (xyzCloudPtrFiltered->points[inliers->indices[0]].z  + 5));
   pass.filter (*xyzCloudPtrPassthroughFiltered);
 
 
+  // perform euclidean cluster segmentation to classify individual objects
 
-
-  // Creating the KdTree object for the search method of the extraction
+  // Create the KdTree object for the search method of the extraction
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
   tree->setInputCloud (xyzCloudPtrPassthroughFiltered);
 
+  // create the extraction object for the clusters
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+  // specify euclidean cluster parameters
   ec.setClusterTolerance (0.02); // 2cm
   ec.setMinClusterSize (100);
   ec.setMaxClusterSize (25000);
   ec.setSearchMethod (tree);
   ec.setInputCloud (xyzCloudPtrPassthroughFiltered);
+  // exctract the indices pertaining to each cluster and store in a vector of pcl::PointIndices
   ec.extract (cluster_indices);
 
-  int j = 0;
-  //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
-  //cloud_cluster->height = 1;
-  //cloud_cluster->is_dense = true;
+  uint32_t j =0;
+  uint32_t color=0;
+
+  // here, cluster_indices is a vector of indices for each cluster. iterate through each indices object to work with them seporately
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
 
+    // now we are in a vector of indices pertining to a single cluster.
+    // Assign each point corresponding to this cluster in xyzCloudPtrPassthroughFiltered a specific color for identification purposes
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
     {
-      xyzCloudPtrPassthroughFiltered->points[*pit].rgb = 10^j; // need to figure out how to generate random color assignment
-      //cloud_cluster->points.push_back (xyzCloudPtrPassthroughFiltered->points[*pit]);
-      //cloud_cluster->width = cloud_cluster->points.size ();
-
-
+      xyzCloudPtrPassthroughFiltered->points[*pit].rgb =  color ; // This only works as a differentiation color assignment tool if the number of clusters is small
     }
-    j++;
+
+    ++j;
+    color += 0x00000e << (j*3) ;
   }
 
 
