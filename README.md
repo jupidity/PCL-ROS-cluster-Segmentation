@@ -1,71 +1,73 @@
+[image1]: ./photos/originalPointCloud.png
+[image2]: ./photos/VoxelPointCloud.png
+[image3]: ./photos/passthroughPointCloud.png
+[image4]: ./photos/ransacPointCloud.png
+[image5]: ./photos/passthroughEdgePointCloud.png
+[image6]: ./photos/finalSegmentation.png
+
 ### ROS Node for Cluster Based Segmentation with PCL
 ---
 
-`Python` `ROS` node for image segmentation on a cluttered environment with cluster based methods. Tested in simulation environment provided at https://github.com/udacity/RoboND-Perception-Exercises.git. Node sensor input is `ROS` msg `PointCloud2` generated in `Gazebo` simulation environment from RGBD camera. `pcl_helper.py` lib provided for `ROS` `PointCloud2` msg to PCL data structure conversions.
+`C++` `ROS` node for image segmentation on a cluttered table with cluster based methods. Tested in simulation environment provided at https://github.com/udacity/RoboND-Perception-Exercises.git. Node sensor input is `ROS` msg `PointCloud2` generated in `Gazebo` simulation environment from RGBD camera.`ROS` node `segmentation.cpp` in ``/scripts`` directory.   
 
-`ROS` node `segmentation.py` in ``/scripts`` directory.   
+### Installation
+---
+
+clone the repo:
+
+    git clone https://github.com/jupidity/PCL-ROS-cluster-Segmentation.git
+
+run catkin_make in your ROS source directory
+
+    $ cd ~/catkin_ws
+    $ catkin_make
+
+start the simulation with roslaunch
+
+    $ roslaunch roslaunch sensor_stick robot_spawn.launch
+
+start the segmentation node
+
+    $ rosrun sensor_stick segmentation
+
+the segmentation node publishes `sensor_msgs::PCLPointCloud2` messages to the `/pcl_objects` topic. You can visualize the segmentation in `RViz` by selecting that topic to view.
 
 
 ### Overview
 ---
 
+initially we are given a point cloud in the sensor_msgs::PointCloud2 format of the following scene:
+
+![alt text][image1]
+
 
 code flow during callback is as follows:
 
-The RGBD camera sends sensor data as an ROS msg of type PointCloud2 in the format
+we need to convert the sensor_msgs::PointCloud2 to a pcl::PCLPointCloud2 data type to perform calculations using the pcl library. We can use the conversion functions provided in the `<pcl_conversions/pcl_conversions.h>` lib:
 
-      [sensor_msgs/PointCloud2]:
-      std_msgs/Header header
-      uint32 seq
-      time stamp
-      string frame_id
-      uint32 height
-      uint32 width
-      sensor_msgs/PointField[] fields
-      uint8 INT8=1
-      uint8 UINT8=2
-      uint8 INT16=3
-      uint8 UINT16=4
-      uint8 INT32=5
-      uint8 UINT32=6
-      uint8 FLOAT32=7
-      uint8 FLOAT64=8
-      string name
-      uint32 offset
-      uint8 datatype
-      uint32 count
-      bool is_bigendian
-      uint32 point_step
-      uint32 row_step
-      uint8[] data
-      bool is_dense
-
-We wish to do computations on the point cloud is the standard PointXYZRGB pcl data structure:
-
-      [PointXYZRGB]:
-      uint32 X
-      uint32 Y
-      uint32 Z
-      uint32 RGB
+      // Container for original & filtered data
+      pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
+      pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
 
 
+      // Convert to PCL data type
+      pcl_conversions::toPCL( * cloud_msg, * cloud );
 
-For this application, we can use the data conversion functions provided in `pcl_helper.py` to convert the `ROS` received msg of type `PointCloud2` to a `pcl_XYZRGB` pointcloud
 
-      cloud = pcl_to_ros(pcl_msg)
+Since the intention is to perform cluster based segmentation, we can use voxel grid filtering to condense the data without a large loss of accuracy.
 
-Since the intension is to perform cluster based segmentation, we can use voxel grid filtering to condense the data without a large loss of accuracy. Luckily, the `pcl` PointXYZRGB class has build in functions for voxel filtering we can use.
+      // Perform voxel grid downsampling filtering
+      pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+      sor.setInputCloud (cloudPtr);
+      sor.setLeafSize (0.01, 0.01, 0.01);
+      sor.filter (* cloudFilteredPtr);
 
-      vox = cloud.make_voxel_grid_filter()
+Resulting in the following pointcloud:
 
-      # Set the leaf size, here we use a cube w/ dimensions LEAF_SIZE
-      LEAF_SIZE = 1     
-      vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
+![alt text][image2]
 
-      # Call the filter function to obtain the resultant downsampled point cloud
-      cloud_filtered = vox.filter()
 
-For this example, we wish to focus on a region of interest in the z axis range 0-2. This can be accomplished using the passthrough filter function of the PointXYZRGB class.
+For this example, we wish to focus on a region of interest in the z axis range ``(.5-1.1)``. This can be accomplished using the passthrough filter function of the class.
 
       passthrough = cloud_filtered.make_passthrough_filter()
 
@@ -79,4 +81,8 @@ For this example, we wish to focus on a region of interest in the z axis range 0
       # call the filter function and save the results to the cloud_filtered instance
       cloud_filtered = passthrough.filter()
 
-In the simulation environment, objects are placed on a flat planar table surface. Since we wish to segment objects on the surface, we can remove the table from the could. Since the table is planar, this is a perfect fit for the RANSAC geometric filtration algorithm.       
+![alt text][image3]
+
+In the simulation environment, objects are placed on a flat planar table surface. Since we wish to segment objects on the surface, we can remove the table from the could. Since the table is planar, we can use the RANSAC geometric filtration algorithm.   
+
+![alt text][image4]    

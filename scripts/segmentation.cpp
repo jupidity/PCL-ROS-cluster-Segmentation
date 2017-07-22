@@ -45,7 +45,7 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   pcl_conversions::toPCL(*cloud_msg, *cloud);
 
 
-  // Perform the actual filtering
+  // Perform voxel grid downsampling filtering
   pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
   sor.setInputCloud (cloudPtr);
   sor.setLeafSize (0.01, 0.01, 0.01);
