@@ -4,6 +4,7 @@
 [image4]: ./photos/ransacPointCloud.png
 [image5]: ./photos/passthroughEdgePointCloud.png
 [image6]: ./photos/finalSegmentation.png
+[image7]: ./photos/nodeDuration.png
 
 ### ROS Node for Cluster Based Segmentation with PCL
 ---
@@ -162,4 +163,8 @@ After computation, a different color is assigned to each cluster for visualizati
 
 ![alt text][image6]
 
-At this point, image identification could be used on each pcl cluster to locate an object of interest.  
+At this point, image identification could be used on each pcl cluster to locate an object of interest.
+
+Total computation is low enough for real time execution, performing at ~5fps
+
+![alt text][image7]
