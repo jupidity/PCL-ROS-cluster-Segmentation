@@ -33,6 +33,13 @@ start the segmentation node
 the segmentation node publishes `sensor_msgs::PCLPointCloud2` messages to the `/pcl_objects` topic. You can visualize the segmentation in `RViz` by selecting that topic to view.
 
 
+### Dependencies
+---
+
+pcl 1.7
+ROS Kinetic
+Gazebo 7
+
 ### Overview
 ---
 
@@ -131,7 +138,27 @@ From the above point cloud, its apparent that the RANSAC algorithm has left the 
 ![alt text][image5]
 
 
-with the edge removed, we can use Euclidean cluster segmentation to identify each individual object remaining. After computation, a different color is assigned to each cluster for visualization purposes.
+with the edge removed, we can use Euclidean cluster segmentation to identify each unique cluster.
+
+
+
+      // Create the KdTree object for the search method of the extraction
+      pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+      tree->setInputCloud (xyzCloudPtrPassthroughFiltered);
+
+      // create the extraction object for the clusters
+      std::vector<pcl::PointIndices> cluster_indices;
+      pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
+      // specify euclidean cluster parameters
+      ec.setClusterTolerance (0.02); // 2cm
+      ec.setMinClusterSize (100);
+      ec.setMaxClusterSize (25000);
+      ec.setSearchMethod (tree);
+      ec.setInputCloud (xyzCloudPtrPassthroughFiltered);
+      // exctract the indices pertaining to each cluster and store in a vector of pcl::PointIndices
+      ec.extract (cluster_indices);
+
+After computation, a different color is assigned to each cluster for visualization purposes.
 
 ![alt text][image6]
 
