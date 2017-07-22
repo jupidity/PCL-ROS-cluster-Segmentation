@@ -81,8 +81,58 @@ For this example, we wish to focus on a region of interest in the z axis range `
       # call the filter function and save the results to the cloud_filtered instance
       cloud_filtered = passthrough.filter()
 
+resulting in the following point cloud:
+
 ![alt text][image3]
 
-In the simulation environment, objects are placed on a flat planar table surface. Since we wish to segment objects on the surface, we can remove the table from the could. Since the table is planar, we can use the RANSAC geometric filtration algorithm.   
+
+In the simulation environment, objects are placed on a flat planar table surface. Since we wish to segment objects on the surface, we can remove the table from the could. Since the table is planar, we can use the RANSAC geometric filtration algorithm and extract the outliers to remove points corresponding to the table face.   
+
+      // perform ransac planar filtration to remove table top
+      pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+      pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+      // Create the segmentation object
+      pcl::SACSegmentation<pcl::PointXYZRGB> seg1;
+      // Optional
+      seg1.setOptimizeCoefficients (true);
+      // Mandatory
+      seg1.setModelType (pcl::SACMODEL_PLANE);
+      seg1.setMethodType (pcl::SAC_RANSAC);
+      seg1.setDistanceThreshold (0.01);
+
+      seg1.setInputCloud (xyzCloudPtrFiltered);
+      seg1.segment (* inliers, * coefficients);
+
+
+      // Create the filtering object
+      pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+
+      //extract.setInputCloud (xyzCloudPtrFiltered);
+      extract.setInputCloud (xyzCloudPtrFiltered);
+      extract.setIndices (inliers);
+      extract.setNegative (true);
+      extract.filter (* xyzCloudPtrRansacFiltered);
 
 ![alt text][image4]    
+
+From the above point cloud, its apparent that the RANSAC algorithm has left the table edge since its not planar with the table face. Another passthrough filter removing all points below the table height should get rid of the edge.
+
+
+      // create a pcl object to hold the passthrough filtered results
+      pcl::PointCloud<pcl::PointXYZRGB> * xyz_cloud_filtered_passthrough = new pcl::PointCloud<pcl::PointXYZRGB>;
+      pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrPassthroughFiltered (xyz_cloud_filtered_passthrough);
+
+      // Create the filtering object
+      pass.setInputCloud (xyzCloudPtrRansacFiltered);
+      pass.setFilterFieldName ("z");
+      pass.setFilterLimits ((xyzCloudPtrFiltered->points[inliers->indices[0]].z +.01 ), (xyzCloudPtrFiltered->points[inliers->indices[0]].z  + 5));
+      pass.filter (* xyzCloudPtrPassthroughFiltered);
+
+![alt text][image5]
+
+
+with the edge removed, we can use Euclidean cluster segmentation to identify each individual object remaining. After computation, a different color is assigned to each cluster for visualization purposes.
+
+![alt text][image6]
+
+At this point, image identification could be used on each pcl cluster to locate an object of interest.  
