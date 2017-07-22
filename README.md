@@ -38,7 +38,9 @@ the segmentation node publishes `sensor_msgs::PCLPointCloud2` messages to the `/
 ---
 
 pcl 1.7
+
 ROS Kinetic
+
 Gazebo 7
 
 ### Overview
@@ -165,6 +167,6 @@ After computation, a different color is assigned to each cluster for visualizati
 
 At this point, image identification could be used on each pcl cluster to locate an object of interest.
 
-Total computation is low enough for real time execution, performing at ~5fps
+Total computation is low enough for real time execution, performing at ~5fps. The following is ROS_INFO logging ros::Time to console before the final point cloud is published. 
 
 ![alt text][image7]
