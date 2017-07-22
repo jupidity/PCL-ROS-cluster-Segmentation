@@ -26,10 +26,33 @@ Author: Sean Cassero
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-ros::Publisher pub;
 
-void
-cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+
+class segmentation {
+
+public:
+
+  explicit segmentation(ros::NodeHandle nh) : m_nh(nh)  {
+
+    // define the subscriber and publisher
+    m_sub = m_nh.subscribe ("/sensor_stick/point_cloud", 1, &segmentation::cloud_cb, this);
+    m_pub = m_nh.advertise<sensor_msgs::PointCloud2> ("pcl_objects", 1);
+
+  }
+
+private:
+
+ros::NodeHandle m_nh;
+ros::Publisher m_pub;
+ros::Subscriber m_sub;
+
+void cloud_cb(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
+
+}; // end class definition
+
+
+// define callback function
+void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
 
 
@@ -170,22 +193,22 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   ROS_INFO(" ");
 
   // Publish the data
-  pub.publish (output);
+  m_pub.publish (output);
 }
 
-int
-main (int argc, char** argv)
+
+
+int main (int argc, char** argv)
 {
   // Initialize ROS
   ros::init (argc, argv, "segmentation");
   ros::NodeHandle nh;
 
-  // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("/sensor_stick/point_cloud", 1, cloud_cb);
+  segmentation segs(nh);
 
 
-  pub = nh.advertise<sensor_msgs::PointCloud2> ("pcl_objects", 1);
 
-  // Spin
+  while(ros::ok())
   ros::spin ();
+
 }
