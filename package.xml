@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>sensor_stick</name>
+  <name>segmentation</name>
   <version>0.0.0</version>
   <description>The sensor_stick package</description>
 
