@@ -2,7 +2,7 @@
 <package>
   <name>segmentation</name>
   <version>0.0.0</version>
-  <description>The sensor_stick package</description>
+  <description>The segmentation package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -48,6 +48,8 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>libpcl-all-dev</build_depend>
+  <build_depend>message_generation</build_depend>
+
 
 
 
@@ -67,6 +69,7 @@
   <run_depend>xacro</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>libpcl-all</run_depend>
+  <run_depend>message_runtime</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
