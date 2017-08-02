@@ -18,13 +18,11 @@
   args="-urdf -param robot_description -x 0 -y 1.8 -z 0 -R 0 -P 0 -Y 0 -model obj_recognition"/>
 
   <!-- cloud transformer-->
-  <node name="cloud_transformer" pkg="obj_recognition" type="cloud_transformer" respawn="false"/>
+  <node name="cloud_transformer" pkg="obj_recognition" type="obj_recognition_cloud_transformer" respawn="false"/>
 
-  <!-- segmentation-->
-  <node name="segmentation" pkg="obj_recognition" type="segmentation" respawn="false"/>
 
   <!-- feature extractor-->
-  <node name="feature_extractor" pkg="obj_recognition" type="feature_extractor" respawn="false"/>
+  <node name="feature_extractor" pkg="obj_recognition" type="obj_recognition_feature_extractor" respawn="false"/>
 
 
   <!-- launch rviz-->
