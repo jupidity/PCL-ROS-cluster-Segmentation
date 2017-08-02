@@ -35,7 +35,7 @@ public:
   explicit segmentation(ros::NodeHandle nh) : m_nh(nh)  {
 
     // define the subscriber and publisher
-    m_sub = m_nh.subscribe ("/sensor_stick/point_cloud", 1, &segmentation::cloud_cb, this);
+    m_sub = m_nh.subscribe ("/obj_recognition/point_cloud", 1, &segmentation::cloud_cb, this);
     m_pub = m_nh.advertise<sensor_msgs::PointCloud2> ("pcl_objects", 1);
 
   }

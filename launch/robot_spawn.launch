@@ -1,11 +1,11 @@
 <launch>
   <!--Include description and control launch files-->
-  <include file="$(find sensor_stick)/launch/robot_description.launch"/>
-  <include file="$(find sensor_stick)/launch/robot_control.launch"/>
+  <include file="$(find obj_recognition)/launch/robot_description.launch"/>
+  <include file="$(find obj_recognition)/launch/robot_control.launch"/>
 
   <!--Launch a gazebo world-->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find sensor_stick)/worlds/pr2_perception.world"/>
+    <arg name="world_name" value="$(find obj_recognition)/worlds/pr2_perception.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>
@@ -15,13 +15,20 @@
 
   <!--spawn a robot in gazebo world-->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-  args="-urdf -param robot_description -x 0 -y 1.8 -z 0 -R 0 -P 0 -Y 0 -model sensor_stick"/>
+  args="-urdf -param robot_description -x 0 -y 1.8 -z 0 -R 0 -P 0 -Y 0 -model obj_recognition"/>
 
   <!-- cloud transformer-->
-  <node name="cloud_transformer" pkg="sensor_stick" type="cloud_transformer" respawn="false"/>
+  <node name="cloud_transformer" pkg="obj_recognition" type="cloud_transformer" respawn="false"/>
+
+  <!-- segmentation-->
+  <node name="segmentation" pkg="obj_recognition" type="segmentation" respawn="false"/>
+
+  <!-- feature extractor-->
+  <node name="feature_extractor" pkg="obj_recognition" type="feature_extractor" respawn="false"/>
+
 
   <!-- launch rviz-->
   <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false"
-    output="screen" args="-d $(find sensor_stick)/config/perception.rviz"/>
+    output="screen" args="-d $(find obj_recognition)/config/perception.rviz"/>
 
 </launch>

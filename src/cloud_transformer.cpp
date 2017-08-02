@@ -31,7 +31,7 @@ public:
   {
     // Define Publishers and Subscribers here
     pcl_sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &CloudTransformer::pclCallback, this);
-    pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/sensor_stick/point_cloud", 1);
+    pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/obj_recognition/point_cloud", 1);
 
     buffer_.reset(new sensor_msgs::PointCloud2);
     buffer_->header.frame_id = "world";
