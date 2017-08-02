@@ -1,0 +1,1 @@
+detectedObjects[] object
