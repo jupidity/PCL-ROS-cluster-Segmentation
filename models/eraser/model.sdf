@@ -1,0 +1,39 @@
+
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="eraser">
+    <link name="eraser_link">
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.1</mass>
+      </inertial>
+
+      <visual name="eraser_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <material>
+          <script>
+            <uri>model://eraser/materials/scripts</uri>
+            <uri>model://eraser/materials/textures</uri>
+            <name>eraser</name>
+          </script>
+        </material>
+        <geometry>
+          <mesh>
+            <uri>model://eraser/meshes/eraser.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+
+      <collision name="eraser_collision">
+        <pose>0.02 0.02 0.02 0 0 -0.95</pose>
+        <geometry>
+          <box>
+            <size>0.135 0.06 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+
+    </link>
+  </model>
+</sdf>

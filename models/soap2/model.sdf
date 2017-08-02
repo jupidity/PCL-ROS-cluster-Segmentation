@@ -1,0 +1,47 @@
+
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="soap2">
+    <link name="soap2_link">
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.08</mass>
+      </inertial>
+
+      <visual name="soap2_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <material>
+          <script>
+            <uri>model://soap2/materials/scripts</uri>
+            <uri>model://soap2/materials/textures</uri>
+            <name>soap2</name>
+          </script>
+        </material>
+        <geometry>
+          <mesh>
+            <uri>model://soap2/meshes/soap2.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+
+      <collision name="soap2_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://soap2/meshes/soap2.dae</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.8</mu>
+              <mu2>0.8</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+    </link>
+  </model>
+</sdf>

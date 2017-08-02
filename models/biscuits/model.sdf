@@ -1,0 +1,50 @@
+
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="biscuits">
+    <link name="biscuits_link">
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.08</mass>
+      </inertial>
+
+      <visual name="biscuits_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <material>
+          <script>
+            <uri>model://biscuits/materials/scripts</uri>
+            <uri>model://biscuits/materials/textures</uri>
+            <name>biscuits</name>
+          </script>
+        </material>
+        <geometry>
+          <mesh>
+            <uri>model://biscuits/meshes/biscuits.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+
+      <collision name="biscuits_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://biscuits/meshes/biscuits.dae</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.8</mu>
+              <mu2>0.8</mu2>
+              <fdir1>0.0 0.0 0.0</fdir1>
+              <slip1>0.01</slip1>
+              <slip2>0.01</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+    </link>
+  </model>
+</sdf>

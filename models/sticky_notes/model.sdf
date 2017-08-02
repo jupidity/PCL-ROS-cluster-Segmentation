@@ -1,0 +1,47 @@
+
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="sticky_notes">
+    <link name="sticky_notes_link">
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.08</mass>
+      </inertial>
+
+      <visual name="sticky_notes_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <material>
+          <script>
+            <uri>model://sticky_notes/materials/scripts</uri>
+            <uri>model://sticky_notes/materials/textures</uri>
+            <name>sticky_notes</name>
+          </script>
+        </material>
+        <geometry>
+          <mesh>
+            <uri>model://sticky_notes/meshes/sticky_notes.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+
+      <collision name="sticky_notes_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://sticky_notes/meshes/sticky_notes.dae</uri>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.8</mu>
+              <mu2>0.8</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+    </link>
+  </model>
+</sdf>
