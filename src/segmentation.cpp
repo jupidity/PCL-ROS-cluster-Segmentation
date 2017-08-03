@@ -149,9 +149,6 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // exctract the indices pertaining to each cluster and store in a vector of pcl::PointIndices
   ec.extract (cluster_indices);
 
-  uint32_t j =0;
-  uint32_t color=0;
-
   // declare an instance of the SegmentedClustersArray message
   obj_recognition::SegmentedClustersArray CloudClusters;
 
@@ -185,10 +182,8 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   }
 
-
   // publish the clusters
   m_clusterPub.publish(CloudClusters);
-
 
 }
 
