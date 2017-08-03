@@ -36,7 +36,6 @@ public:
 
     // define the subscriber and publisher
     m_sub = m_nh.subscribe ("/obj_recognition/point_cloud", 1, &segmentation::cloud_cb, this);
-    m_pub = m_nh.advertise<sensor_msgs::PointCloud2> ("obj_recognition/pcl_objects", 1);
     m_clusterPub = m_nh.advertise<obj_recognition::SegmentedClustersArray> ("obj_recognition/pcl_clusters",1);
 
   }
@@ -131,21 +130,8 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   extract.filter (*xyzCloudPtrRansacFiltered);
 
 
-/*
-  // perform passthrough filtering to remove table edge based on table top z parameter
 
-  // create a pcl object to hold the passthrough filtered results
-  pcl::PointCloud<pcl::PointXYZRGB> *xyz_cloud_filtered_passthrough = new pcl::PointCloud<pcl::PointXYZRGB>;
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtrPassthroughFiltered (xyz_cloud_filtered_passthrough);
-
-  // Create the filtering object
-  pass.setInputCloud (xyzCloudPtrRansacFiltered);
-  pass.setFilterFieldName ("z");
-  pass.setFilterLimits ((xyzCloudPtrFiltered->points[inliers->indices[0]].z +.01 ), (xyzCloudPtrFiltered->points[inliers->indices[0]].z  + 5));
-  pass.filter (*xyzCloudPtrPassthroughFiltered);
-*/
-
-  // perform euclidean cluster segmentation to classify individual objects
+  // perform euclidean cluster segmentation to seporate individual objects
 
   // Create the KdTree object for the search method of the extraction
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
@@ -185,8 +171,7 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
     {
       clusterPtr->points.push_back(xyzCloudPtrRansacFiltered->points[*pit]);
-      xyzCloudPtrRansacFiltered->points[*pit].rgb =  color ; // This only works as a differentiation color assignment tool if the number of clusters is small
-    }
+        }
 
 
     // convert to pcl::PCLPointCloud2
@@ -198,28 +183,13 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     // add the cluster to the array message
     CloudClusters.clusters.push_back(output);
 
-
-
-    // increment the color
-    ++j;
-    color += 0x00000e << (j*3) ;
   }
 
 
   // publish the clusters
   m_clusterPub.publish(CloudClusters);
 
-  // convert to pcl::PCLPointCloud2
-  pcl::toPCLPointCloud2( *xyzCloudPtrRansacFiltered ,outputPCL);
 
-  // Convert to ROS data type
-  pcl_conversions::fromPCL(outputPCL, output);
-
-
-  ROS_INFO(" ");
-
-  // Publish the data
-  m_pub.publish (output);
 }
 
 
