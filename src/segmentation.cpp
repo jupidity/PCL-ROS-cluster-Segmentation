@@ -152,6 +152,7 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // declare an instance of the SegmentedClustersArray message
   obj_recognition::SegmentedClustersArray CloudClusters;
 
+  // declare the output variable instances
   sensor_msgs::PointCloud2 output;
   pcl::PCLPointCloud2 outputPCL;
 
@@ -196,8 +197,6 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   segmentation segs(nh);
-
-
 
   while(ros::ok())
   ros::spin ();
