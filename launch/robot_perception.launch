@@ -1,0 +1,13 @@
+
+<!-- launch file for the perception pipeline  -->
+<!-- Author: Sean Cassero -->
+<launch>
+
+  <!-- segmentation -->
+  <node name= "segmentation" pkg= "obj_recognition" type= "obj_recognition_segmentation" respawn= "false">
+
+  <!-- marker generation -->
+  <node name= "marker_generation" pkg= "obj_recognition" type= "marker_generation.py" respawn= "false">
+
+
+</launch>
