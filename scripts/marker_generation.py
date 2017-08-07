@@ -46,6 +46,8 @@ def pcl_callback(pcl_msg):
         label = encoder.inverse_transform(prediction)[0]
         detected_objects_labels.append(label)
 
+        rospy.loginfo(pcl_cloud.data[0])
+
         # Publish a label into RViz
         label_pos = list([index,index,index])
         label_pos[2] += .4
