@@ -34,11 +34,11 @@ def pcl_callback(pcl_msg):
     detected_objects = []
 
 
-    for cloud in pcl_msg.clusters:
+    for index, pcl_cloud in enumerate(pcl_msg.clusters):
 
         # Extract histogram features
-        chists = compute_color_histograms(cloud, using_hsv=True)
-        normals = get_normals(cloud)
+        chists = compute_color_histograms(pcl_cloud, using_hsv=True)
+        normals = get_normals(pcl_cloud)
         nhists = compute_normal_histograms(normals)
         feature = np.concatenate((chists, nhists))
 
@@ -47,15 +47,14 @@ def pcl_callback(pcl_msg):
         detected_objects_labels.append(label)
 
         # Publish a label into RViz
-        label_pos = list(cloud.data[0])
+        label_pos = list([index,index,index])
         label_pos[2] += .4
         object_markers_pub.publish(make_label(label,label_pos, index))
-
 
         # Add the detected object to the list of detected objects.
         do = DetectedObject()
         do.label = label
-        do.cloud = ros_cluster
+        do.cloud = pcl_cloud
         detected_objects.append(do)
 
     rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
@@ -71,7 +70,9 @@ if __name__ == '__main__':
 
     # Create Subscribers
     sub = rospy.Subscriber('obj_recognition/pcl_clusters' , SegmentedClustersArray, pcl_callback )
-    pub = rospy.Publisher('obj_recognition/detected_objects', DetectedObjectsArray , queue_size=1)
+    detected_objects_pub = rospy.Publisher('/detected_objects', DetectedObjectsArray , queue_size=1)
+    object_markers_pub = rospy.Publisher('/object_markers', Marker , queue_size=1)
+
 
     # Load Model From disk
     model = pickle.load(open('model.sav', 'rb'))
