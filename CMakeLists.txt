@@ -57,8 +57,6 @@ catkin_python_setup()
    DetectedObjectsArray.msg
 	 DetectedObject.msg
 	 SegmentedClustersArray.msg
-	 SegmentedClusterDataArray.msg
-	 ClusterData.msg
 
 #   Message2.msg
  )
