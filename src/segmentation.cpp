@@ -26,6 +26,7 @@ Author: Sean Cassero
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <obj_recognition/SegmentedClustersArray.h>
+#include <obj_recognition/ClusterData.h>
 
 
 class segmentation {
@@ -160,6 +161,10 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
 
+    // create a new clusterData message object
+    //obj_recognition::ClusterData clusterData;
+
+
     // create a pcl object to hold the extracted cluster
     pcl::PointCloud<pcl::PointXYZRGB> *cluster = new pcl::PointCloud<pcl::PointXYZRGB>;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusterPtr (cluster);
@@ -169,8 +174,16 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
     {
       clusterPtr->points.push_back(xyzCloudPtrRansacFiltered->points[*pit]);
+
         }
 
+
+    // log the position of the cluster
+    //clusterData.position[0] = (*cloudPtr).data[0];
+    //clusterData.position[1] = (*cloudPtr).points.back().y;
+    //clusterData.position[2] = (*cloudPtr).points.back().z;
+    //std::string info_string = string(cloudPtr->points.back().x);
+    //printf(clusterData.position[0]);
 
     // convert to pcl::PCLPointCloud2
     pcl::toPCLPointCloud2( *clusterPtr ,outputPCL);
@@ -179,6 +192,7 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     pcl_conversions::fromPCL(outputPCL, output);
 
     // add the cluster to the array message
+    //clusterData.cluster = output;
     CloudClusters.clusters.push_back(output);
 
   }
