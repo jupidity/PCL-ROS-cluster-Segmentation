@@ -46,12 +46,7 @@ def pcl_callback(pcl_msg):
         label = encoder.inverse_transform(prediction)[0]
         detected_objects_labels.append(label)
 
-        #rospy.loginfo(pcl_cloud.data[0])
-
         # Publish a label into RViz
-        #label_pos = list([pcl_cloud.position[0],pcl_cloud.position[1],pcl_cloud.position[2]])
-        #label_pos = list([index,index,index])
-        #label_pos = list(white_cloud[pts_list[0]])
         pcl_pointCloud = ros_to_pcl(pcl_cloud)
         label_pos = list(pcl_pointCloud[0])
         label_pos[2] += .4
@@ -64,7 +59,6 @@ def pcl_callback(pcl_msg):
         detected_objects.append(do)
 
     rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
-    #rospy.loginfo('{}'.format(pcl_pointCloud[0]))
 
     # Publish the list of detected objects
     # This is the output you'll need to complete the upcoming project!
