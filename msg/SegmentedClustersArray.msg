@@ -1,1 +1,1 @@
-ClusterData[] clusters
+sensor_msgs/PointCloud2[] clusters
