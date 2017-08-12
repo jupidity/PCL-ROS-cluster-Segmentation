@@ -161,6 +161,9 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
 
+    // create a new clusterData message object
+    //obj_recognition::ClusterData clusterData;
+
 
     // create a pcl object to hold the extracted cluster
     pcl::PointCloud<pcl::PointXYZRGB> *cluster = new pcl::PointCloud<pcl::PointXYZRGB>;
@@ -174,6 +177,13 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
         }
 
+
+    // log the position of the cluster
+    //clusterData.position[0] = (*cloudPtr).data[0];
+    //clusterData.position[1] = (*cloudPtr).points.back().y;
+    //clusterData.position[2] = (*cloudPtr).points.back().z;
+    //std::string info_string = string(cloudPtr->points.back().x);
+    //printf(clusterData.position[0]);
 
     // convert to pcl::PCLPointCloud2
     pcl::toPCLPointCloud2( *clusterPtr ,outputPCL);
