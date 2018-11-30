@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
 <package>
-<<<<<<< HEAD
   <name>obj_recognition</name>
-=======
-  <name>sensor_stick</name>
->>>>>>> parent of b6ce8bb... changed project name to reflect current goal
   <version>0.0.0</version>
   <description>The obj_recognition package</description>
 

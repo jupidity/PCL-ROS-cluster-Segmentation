@@ -17,6 +17,7 @@ from obj_recognition.msg import DetectedObjectsArray
 from obj_recognition.msg import DetectedObject
 from obj_recognition.msg import SegmentedClustersArray
 from obj_recognition.pcl_helper import *
+import os
 
 
 def get_normals(cloud):
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 
 
     # Load Model From disk
-    model = pickle.load(open('model.sav', 'rb'))
+    model = pickle.load(open(os.path.dirname(os.path.abspath(__file__)) + '/model.sav', 'rb'))
     clf = model['classifier']
     encoder = LabelEncoder()
     encoder.classes_ = model['classes']
