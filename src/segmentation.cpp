@@ -28,6 +28,7 @@ Author: Sean Cassero
 #include <obj_recognition/SegmentedClustersArray.h>
 // #include <obj_recognition/ClusterData.h>
 #include <pcl/features/normal_3d.h>
+#include <std_msgs/Float32.h>
 
 class segmentation {
 
@@ -38,8 +39,11 @@ public:
     // define the subscriber and publisher
     // m_sub = m_nh.subscribe ("/obj_recognition/point_cloud", 1, &segmentation::cloud_cb, this);
 
-    m_sub = m_nh.subscribe ("/camera/depth_registered/points", 1, &segmentation::cloud_cb, this);
+    m_sub = m_nh.subscribe ("/camera/depth/points", 1, &segmentation::cloud_cb, this);
     table_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/obj_recognition/table_point_cloud", 1);
+    table_centroid_pub_x = m_nh.advertise<std_msgs::Float32>("/obj_recognition/table_centroid_x", 1);
+    table_centroid_pub_y = m_nh.advertise<std_msgs::Float32>("/obj_recognition/table_centroid_y", 1);
+    table_centroid_pub_z = m_nh.advertise<std_msgs::Float32>("/obj_recognition/table_centroid_z", 1);
 
     m_clusterPub = m_nh.advertise<obj_recognition::SegmentedClustersArray> ("obj_recognition/pcl_clusters",1);
 
@@ -52,6 +56,9 @@ ros::Publisher m_pub;
 ros::Subscriber m_sub;
 ros::Publisher m_clusterPub;
 ros::Publisher table_pub;
+ros::Publisher table_centroid_pub_x;
+ros::Publisher table_centroid_pub_y;
+ros::Publisher table_centroid_pub_z;
 
 void cloud_cb(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
 
@@ -154,6 +161,18 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   Eigen::Vector4f centroid;
   pcl::compute3DCentroid(*xyzCloudPtrRansacFiltered,centroid);
   std::cerr << "Plane Centroid: " << centroid[0] << "     " << centroid[1] << "     " << centroid[2] << std::endl;
+
+  std_msgs::Float32 msg;
+  msg.data = centroid[0];
+  table_centroid_pub_x.publish(msg);
+
+  msg.data = centroid[1];
+  table_centroid_pub_y.publish(msg);
+
+  msg.data = centroid[2];
+  table_centroid_pub_z.publish(msg);
+  // table_centroid_pub_y.publish(centroid[1]);
+  // table_centroid_pub_z.publish(centroid[2]);
 
   // pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
   // ne.setInputCloud (xyzCloudPtrRansacFiltered);
