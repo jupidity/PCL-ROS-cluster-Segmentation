@@ -30,7 +30,7 @@ public:
     : nh_(nh)
   {
     // Define Publishers and Subscribers here
-    pcl_sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &CloudTransformer::pclCallback, this);
+    pcl_sub_ = nh_.subscribe("/camera/depth/points", 1, &CloudTransformer::pclCallback, this);
     pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/obj_recognition/point_cloud", 1);
 
     buffer_.reset(new sensor_msgs::PointCloud2);
@@ -43,11 +43,13 @@ private:
   ros::Publisher pcl_pub_;
   tf::TransformListener listener_;
   sensor_msgs::PointCloud2::Ptr buffer_;
+  tf::StampedTransform transform;
 
   void pclCallback(const sensor_msgs::PointCloud2ConstPtr& pcl_msg)
   {
-    listener_.waitForTransform("world", "camera_link", ros::Time::now(), ros::Duration(3.0));
-    pcl_ros::transformPointCloud("world", *pcl_msg, *buffer_, listener_);
+    // listener_.waitForTransform("imu", "camera_link", ros::Time::now(), ros::Duration(1000.0));
+    listener_.lookupTransform("world", "camera_depth_optical_frame", ros::Time(0), transform);
+    pcl_ros::transformPointCloud("world", transform, *pcl_msg, *buffer_);
     pcl_pub_.publish(buffer_);
   }
 };  // End of class CloudTransformer

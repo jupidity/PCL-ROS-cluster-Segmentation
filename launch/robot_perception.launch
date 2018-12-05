@@ -9,5 +9,7 @@
   <!-- marker generation -->
   <node name= "marker_generation" pkg= "obj_recognition" type= "marker_generation.py" respawn= "false"/>
 
-
+  <!-- cloud transformer-->
+  <node name="cloud_transformer" pkg="obj_recognition" type="obj_recognition_cloud_transformer" respawn="false"/>
+  
 </launch>

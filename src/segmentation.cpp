@@ -37,9 +37,9 @@ public:
   explicit segmentation(ros::NodeHandle nh) : m_nh(nh)  {
 
     // define the subscriber and publisher
-    // m_sub = m_nh.subscribe ("/obj_recognition/point_cloud", 1, &segmentation::cloud_cb, this);
+    m_sub = m_nh.subscribe ("/obj_recognition/point_cloud", 1, &segmentation::cloud_cb, this);
 
-    m_sub = m_nh.subscribe ("/camera/depth/points", 1, &segmentation::cloud_cb, this);
+    // m_sub = m_nh.subscribe ("/camera/depth/points", 1, &segmentation::cloud_cb, this);
     table_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/obj_recognition/table_point_cloud", 1);
     table_centroid_pub_x = m_nh.advertise<std_msgs::Float32>("/obj_recognition/table_centroid_x", 1);
     table_centroid_pub_y = m_nh.advertise<std_msgs::Float32>("/obj_recognition/table_centroid_y", 1);
@@ -160,10 +160,26 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   extract.filter (*xyzCloudPtrRansacFiltered);
   Eigen::Vector4f centroid;
   pcl::compute3DCentroid(*xyzCloudPtrRansacFiltered,centroid);
+
+
+
   std::cerr << "Plane Centroid: " << centroid[0] << "     " << centroid[1] << "     " << centroid[2] << std::endl;
+
+  // centroid[1] = 1 - centroid[1];
+
+  // std::cerr << "Plane Centroid: " << centroid[0] << "     " << centroid[2] << "     " << centroid[1] << std::endl;
+
 
   std_msgs::Float32 msg;
   msg.data = centroid[0];
+  // table_centroid_pub_x.publish(msg);
+  //
+  // msg.data = centroid[1];
+  // table_centroid_pub_y.publish(msg);
+  //
+  // msg.data = centroid[2];
+  // table_centroid_pub_z.publish(msg);
+
   table_centroid_pub_x.publish(msg);
 
   msg.data = centroid[1];
