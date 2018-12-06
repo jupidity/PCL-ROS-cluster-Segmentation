@@ -1,0 +1,4 @@
+sklearn
+matplotlib
+cython==0.25.2
+numpy
