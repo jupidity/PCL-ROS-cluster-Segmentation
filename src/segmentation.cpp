@@ -127,7 +127,7 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // Mandatory
   seg1.setModelType (pcl::SACMODEL_PLANE);
   seg1.setMethodType (pcl::SAC_RANSAC);
-  seg1.setDistanceThreshold (0.04);
+  seg1.setDistanceThreshold (0.02);
 
   seg1.setInputCloud (xyzCloudPtrFiltered);
   // seg1.setInputCloud (xyzCloudPtr);
