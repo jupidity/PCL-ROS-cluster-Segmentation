@@ -44,6 +44,7 @@ private:
   tf::TransformListener listener_;
   sensor_msgs::PointCloud2::Ptr buffer_;
   tf::StampedTransform transform;
+  int cloud_transformer_request;
 
   void pclCallback(const sensor_msgs::PointCloud2ConstPtr& pcl_msg)
   {
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   CloudTransformer tranform_cloud(nh);
-
+  // nh.setParam("cloud_transformer_request", 0);
   // Spin until ROS is shutdown
   while (ros::ok())
     ros::spin();
