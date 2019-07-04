@@ -30,11 +30,11 @@ public:
     : nh_(nh)
   {
     // Define Publishers and Subscribers here
-    pcl_sub_ = nh_.subscribe("/camera/depth/points", 1, &CloudTransformer::pclCallback, this);
+    pcl_sub_ = nh_.subscribe("/head_camera/depth_registered/points", 1, &CloudTransformer::pclCallback, this);
     pcl_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/obj_recognition/point_cloud", 1);
 
     buffer_.reset(new sensor_msgs::PointCloud2);
-    buffer_->header.frame_id = "world";
+    buffer_->header.frame_id = "map";
   }
 
 private:
@@ -47,10 +47,14 @@ private:
 
   void pclCallback(const sensor_msgs::PointCloud2ConstPtr& pcl_msg)
   {
-    // listener_.waitForTransform("imu", "camera_link", ros::Time::now(), ros::Duration(1000.0));
-    listener_.lookupTransform("world", "camera_depth_optical_frame", ros::Time(0), transform);
-    pcl_ros::transformPointCloud("world", transform, *pcl_msg, *buffer_);
-    pcl_pub_.publish(buffer_);
+    try {
+      listener_.waitForTransform("map", "head_camera_color_optical_frame", ros::Time::now(), ros::Duration(10.0));
+      listener_.lookupTransform("map", "head_camera_color_optical_frame", ros::Time(0), transform);
+      pcl_ros::transformPointCloud("map", transform, *pcl_msg, *buffer_);
+      pcl_pub_.publish(buffer_);
+    } catch (int e) {
+      std::cout << "Exception occured " << e << std::endl;
+    }
   }
 };  // End of class CloudTransformer
 

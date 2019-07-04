@@ -138,13 +138,13 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     ROS_ERROR ("Could not estimate a planar model for the given dataset.");
     // return (-1);
   }
-
-  std::cerr << "Model coefficients: " << coefficients->values[0] << " "
-                                      << coefficients->values[1] << " "
-                                      << coefficients->values[2] << " "
-                                      << coefficients->values[3] << std::endl;
-
-  std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
+  //Ucomment to debug
+  // std::cerr << "Model coefficients: " << coefficients->values[0] << " "
+  //                                     << coefficients->values[1] << " "
+  //                                     << coefficients->values[2] << " "
+  //                                     << coefficients->values[3] << std::endl;
+  //
+  // std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
   // for (size_t i = 0; i < inliers->indices.size (); ++i)
   //   std::cerr << inliers->indices[i] << "    " << cloud->points[inliers->indices[i]].x << " "
   //                                              << cloud->points[inliers->indices[i]].y << " "
@@ -162,8 +162,8 @@ void segmentation::cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   pcl::compute3DCentroid(*xyzCloudPtrRansacFiltered,centroid);
 
 
-
-  std::cerr << "Plane Centroid: " << centroid[0] << "     " << centroid[1] << "     " << centroid[2] << std::endl;
+  //Ucomment to debug
+  // std::cerr << "Plane Centroid: " << centroid[0] << "     " << centroid[1] << "     " << centroid[2] << std::endl;
 
   // centroid[1] = 1 - centroid[1];
 
